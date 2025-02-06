@@ -606,6 +606,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `url` _string_ |  |  |  |
+| `releases` _[ComponentRelease](#componentrelease) array_ |  |  |  |
 
 
 #### DashboardList
@@ -661,6 +662,7 @@ _Appears in:_
 | `observedGeneration` _integer_ |  |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#condition-v1-meta) array_ |  |  |  |
 | `url` _string_ |  |  |  |
+| `releases` _[ComponentRelease](#componentrelease) array_ |  |  |  |
 
 
 #### DataSciencePipelines
