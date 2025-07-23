@@ -191,3 +191,23 @@ webhooks:
     - rayjobs
     - rayclusters
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /platform-dataconnection-notebook
+  failurePolicy: Fail
+  name: notebook-connections-validator.opendatahub.io
+  rules:
+  - apiGroups:
+    - kubeflow.org
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - notebooks
+  sideEffects: None
