@@ -66,12 +66,11 @@ func kueueTestSuite(t *testing.T) {
 		{"Validate CRDs reinstated", componentCtx.ValidateCRDReinstated},
 		{"Validate pre check", componentCtx.ValidateKueuePreCheck},
 		{"Validate component releases", componentCtx.ValidateComponentReleases},
-		// TODO: Disabled until these tests have been hardened (RHOAIENG-27721)
-		// {"Validate deployment deletion recovery", componentCtx.ValidateDeploymentDeletionRecovery},
-		// {"Validate configmap deletion recovery", componentCtx.ValidateConfigMapDeletionRecovery},
-		// {"Validate service deletion recovery", componentCtx.ValidateServiceDeletionRecovery},
-		// {"Validate serviceaccount deletion recovery", componentCtx.ValidateServiceAccountDeletionRecovery},
-		// {"Validate rbac deletion recovery", componentCtx.ValidateRBACDeletionRecovery},
+		{"Validate deployment deletion recovery", componentCtx.ValidateDeploymentDeletionRecovery},
+		{"Validate configmap deletion recovery", componentCtx.ValidateConfigMapDeletionRecovery},
+		{"Validate service deletion recovery", componentCtx.ValidateServiceDeletionRecovery},
+		{"Validate rbac deletion recovery", componentCtx.ValidateRBACDeletionRecovery},
+		{"Validate serviceaccount deletion recovery", componentCtx.ValidateServiceAccountDeletionRecovery},
 	}
 
 	// Only add OCP Kueue operator test if OCP version is 4.18 or above
