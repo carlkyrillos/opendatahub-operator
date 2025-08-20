@@ -11,6 +11,8 @@ const (
 	Platform               = "platform"
 	True                   = "true"
 	CustomizedAppNamespace = "opendatahub.io/application-namespace"
+	NodeArch               = "kubernetes.io/arch"
+	WorkerNode             = "node-role.kubernetes.io/worker"
 )
 
 // K8SCommon keeps common kubernetes labels [1]

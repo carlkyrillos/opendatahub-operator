@@ -147,6 +147,12 @@ var (
 		Kind:    "Service",
 	}
 
+	Node = schema.GroupVersionKind{
+		Group:   corev1.SchemeGroupVersion.Group,
+		Version: corev1.SchemeGroupVersion.Version,
+		Kind:    "Node",
+	}
+
 	Route = schema.GroupVersionKind{
 		Group:   routev1.SchemeGroupVersion.Group,
 		Version: routev1.SchemeGroupVersion.Version,
