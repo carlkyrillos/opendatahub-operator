@@ -79,7 +79,7 @@ func createTestSecret(name, namespace, connectionType string, data map[string][]
 			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				annotations.ConnectionTypeRef: connectionType,
+				annotations.ConnectionTypeProtocol: connectionType,
 			},
 		},
 		Data: data,

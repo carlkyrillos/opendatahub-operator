@@ -44,11 +44,11 @@ type ConnectionType string
 
 const (
 	// ConnectionTypeURI represents uri connections.
-	ConnectionTypeURI ConnectionType = "uri-v1"
+	ConnectionTypeURI ConnectionType = "uri"
 	// ConnectionTypeS3 represents s3 connections.
 	ConnectionTypeS3 ConnectionType = "s3"
 	// ConnectionTypeOCI represents oci connections.
-	ConnectionTypeOCI ConnectionType = "oci-v1"
+	ConnectionTypeOCI ConnectionType = "oci"
 )
 
 func (ct ConnectionType) String() string {
@@ -247,9 +247,9 @@ func ValidateInferenceServiceConnectionAnnotation(ctx context.Context,
 	}
 
 	// Additional validation: check the secret's connections-type-ref annotation exists and has a non-empty value
-	connectionType := resources.GetAnnotation(secretMeta, annotations.ConnectionTypeRef)
+	connectionType := resources.GetAnnotation(secretMeta, annotations.ConnectionTypeProtocol)
 	if connectionType == "" {
-		return admission.Allowed(fmt.Sprintf("Secret '%s' does not have '%s' annotation", annotationValue, annotations.ConnectionTypeRef)), "", ""
+		return admission.Allowed(fmt.Sprintf("Secret '%s' does not have '%s' annotation", annotationValue, annotations.ConnectionTypeProtocol)), "", ""
 	}
 
 	// Validate that the connection type is one of the allowed values

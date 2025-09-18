@@ -506,6 +506,6 @@ func (w *ConnectionWebhook) getOldConnectionInfo(ctx context.Context, req admiss
 		return "", "", fmt.Errorf("failed to get old secret metadata: %w", err)
 	}
 
-	oldConnectionType := resources.GetAnnotation(secretMeta, annotations.ConnectionTypeRef)
+	oldConnectionType := resources.GetAnnotation(secretMeta, annotations.ConnectionTypeProtocol)
 	return oldAnnotationValue, oldConnectionType, nil
 }
