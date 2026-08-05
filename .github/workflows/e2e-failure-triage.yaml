@@ -31,6 +31,8 @@ jobs:
             exit 0
           fi
 
+          # TEMPORARY: hardcode PR number for fork testing (remove before merging to upstream)
+          PR_NUMBER=4
           echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           echo "prow_url=$TARGET_URL" >> "$GITHUB_OUTPUT"
           echo "skip=false" >> "$GITHUB_OUTPUT"
