@@ -69,15 +69,26 @@ jobs:
         if: steps.extract-pr.outputs.skip != 'true' && steps.check-label.outputs.skip != 'true'
         run: pip install -r .github/scripts/e2e-failure-triage/requirements.txt
 
+      - name: Fetch existing triage comment
+        if: steps.extract-pr.outputs.skip != 'true' && steps.check-label.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${{ github.repository }}/issues/${{ steps.extract-pr.outputs.pr_number }}/comments" \
+            --jq '.[] | select(.body | contains("<!-- e2e-triage-section:")) | .body' \
+            > "${{ runner.temp }}/existing-comment.md" 2>/dev/null || true
+
       - name: Run triage script
         if: steps.extract-pr.outputs.skip != 'true' && steps.check-label.outputs.skip != 'true'
         env:
           PROW_URL: ${{ steps.extract-pr.outputs.prow_url }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          GITHUB_ACTION_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           python .github/scripts/e2e-failure-triage/triage.py \
             --prow-url "$PROW_URL" \
+            --existing-comment "${{ runner.temp }}/existing-comment.md" \
             --comment-output "${{ runner.temp }}/pr-comment.md" \
             --dry-run
 

@@ -832,31 +832,26 @@ def print_summary(result: TriageResult) -> None:
 # ---------------------------------------------------------------------------
 
 
-def generate_pr_comment(
+SECTION_START_MARKER = "<!-- e2e-triage-section:{suite} -->"
+SECTION_END_MARKER = "<!-- /e2e-triage-section:{suite} -->"
+
+
+def _generate_section(
     result: TriageResult,
     bug_results: list[BlockerBugResult] | None,
+    action_run_url: str | None = None,
 ) -> str:
-    """Generate a markdown comment body for the PR."""
+    """Generate the content for one suite's section."""
     lines: list[str] = []
-    lines.append("## E2E Failure Triage")
-    lines.append("")
 
     if not result.junit_found:
         lines.append("Prow job failed before E2E tests ran (infrastructure).")
         lines.append("No component blocker bugs filed.")
-        lines.append("")
-        lines.append(f"[Prow run]({result.prow_url})")
-        return "\n".join(lines)
-
-    if not result.component_failures:
+    elif not result.component_failures:
         lines.append("No actionable component test failures detected.")
         if result.flaky_failures_skipped > 0:
             lines.append(f"({result.flaky_failures_skipped} flaky test(s) passed on retry)")
-        lines.append("")
-        lines.append(f"[Prow run]({result.prow_url})")
-        return "\n".join(lines)
-
-    if bug_results:
+    elif bug_results:
         for br in bug_results:
             if br.action == "created" and br.issue_key:
                 lines.append(
@@ -881,10 +876,45 @@ def generate_pr_comment(
             lines.append(f"- **{cf.component}** ({jira_comp}): `{cf.test_name}`")
 
     lines.append("")
-    lines.append(f"E2E suite: `{result.context}`")
-    lines.append(f"[Prow run]({result.prow_url})")
+    links = f"[Prow run]({result.prow_url})"
+    if action_run_url:
+        links += f" | [Triage action]({action_run_url})"
+    lines.append(links)
 
     return "\n".join(lines)
+
+
+def generate_pr_comment(
+    result: TriageResult,
+    bug_results: list[BlockerBugResult] | None,
+    action_run_url: str | None = None,
+    existing_comment: str | None = None,
+) -> str:
+    """Generate a combined PR comment with sections for each E2E suite.
+
+    Each suite's results are wrapped in HTML comment markers so subsequent
+    runs can update their section without overwriting the other suite's results.
+    """
+    suite = result.context
+    section_content = _generate_section(result, bug_results, action_run_url)
+
+    start_marker = SECTION_START_MARKER.format(suite=suite)
+    end_marker = SECTION_END_MARKER.format(suite=suite)
+
+    new_section = f"{start_marker}\n### `{suite}`\n{section_content}\n{end_marker}"
+
+    if existing_comment and start_marker in existing_comment:
+        pattern = re.compile(
+            re.escape(start_marker) + r".*?" + re.escape(end_marker),
+            re.DOTALL,
+        )
+        combined = pattern.sub(new_section, existing_comment)
+        return combined
+
+    if existing_comment and "## E2E Failure Triage" in existing_comment:
+        return existing_comment.rstrip() + "\n\n" + new_section
+
+    return f"## E2E Failure Triage\n\n{new_section}"
 
 
 # ---------------------------------------------------------------------------
@@ -905,6 +935,16 @@ def main() -> None:
         "--comment-output",
         default=None,
         help="Path to write the PR comment markdown body (for GHA to post)",
+    )
+    parser.add_argument(
+        "--existing-comment",
+        default=None,
+        help="Path to file containing the existing PR comment body (for merging sections)",
+    )
+    parser.add_argument(
+        "--action-run-url",
+        default=os.environ.get("GITHUB_ACTION_RUN_URL", ""),
+        help="URL of the GitHub Actions run (for linking in PR comments)",
     )
     parser.add_argument(
         "--dry-run",
@@ -939,8 +979,13 @@ def main() -> None:
     result = run_triage(args)
     print_summary(result)
 
+    action_run_url = args.action_run_url or None
+    existing_comment = None
+    if args.existing_comment and Path(args.existing_comment).exists():
+        existing_comment = Path(args.existing_comment).read_text()
+
     if not result.component_failures:
-        comment_body = generate_pr_comment(result, None)
+        comment_body = generate_pr_comment(result, None, action_run_url, existing_comment)
         if args.comment_output:
             Path(args.comment_output).write_text(comment_body)
             log.info("PR comment written to %s", args.comment_output)
@@ -986,7 +1031,7 @@ def main() -> None:
         print(f"  Message:        {br.message}")
     print("=" * 60)
 
-    comment_body = generate_pr_comment(result, bug_results)
+    comment_body = generate_pr_comment(result, bug_results, action_run_url, existing_comment)
     if args.comment_output:
         Path(args.comment_output).write_text(comment_body)
         log.info("PR comment written to %s", args.comment_output)
