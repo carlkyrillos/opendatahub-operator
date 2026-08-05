@@ -835,6 +835,7 @@ def print_summary(result: TriageResult) -> None:
 def generate_pr_comment(
     result: TriageResult,
     bug_results: list[BlockerBugResult] | None,
+    action_run_url: str | None = None,
 ) -> str:
     """Generate a markdown comment body for the PR."""
     lines: list[str] = []
@@ -846,6 +847,8 @@ def generate_pr_comment(
         lines.append("No component blocker bugs filed.")
         lines.append("")
         lines.append(f"[Prow run]({result.prow_url})")
+        if action_run_url:
+            lines.append(f" | [Triage action]({action_run_url})")
         return "\n".join(lines)
 
     if not result.component_failures:
@@ -854,6 +857,8 @@ def generate_pr_comment(
             lines.append(f"({result.flaky_failures_skipped} flaky test(s) passed on retry)")
         lines.append("")
         lines.append(f"[Prow run]({result.prow_url})")
+        if action_run_url:
+            lines.append(f" | [Triage action]({action_run_url})")
         return "\n".join(lines)
 
     if bug_results:
@@ -882,7 +887,10 @@ def generate_pr_comment(
 
     lines.append("")
     lines.append(f"E2E suite: `{result.context}`")
-    lines.append(f"[Prow run]({result.prow_url})")
+    links = f"[Prow run]({result.prow_url})"
+    if action_run_url:
+        links += f" | [Triage action]({action_run_url})"
+    lines.append(links)
 
     return "\n".join(lines)
 
@@ -905,6 +913,11 @@ def main() -> None:
         "--comment-output",
         default=None,
         help="Path to write the PR comment markdown body (for GHA to post)",
+    )
+    parser.add_argument(
+        "--action-run-url",
+        default=os.environ.get("GITHUB_ACTION_RUN_URL", ""),
+        help="URL of the GitHub Actions run (for linking in PR comments)",
     )
     parser.add_argument(
         "--dry-run",
@@ -939,8 +952,10 @@ def main() -> None:
     result = run_triage(args)
     print_summary(result)
 
+    action_run_url = args.action_run_url or None
+
     if not result.component_failures:
-        comment_body = generate_pr_comment(result, None)
+        comment_body = generate_pr_comment(result, None, action_run_url)
         if args.comment_output:
             Path(args.comment_output).write_text(comment_body)
             log.info("PR comment written to %s", args.comment_output)
@@ -986,7 +1001,7 @@ def main() -> None:
         print(f"  Message:        {br.message}")
     print("=" * 60)
 
-    comment_body = generate_pr_comment(result, bug_results)
+    comment_body = generate_pr_comment(result, bug_results, action_run_url)
     if args.comment_output:
         Path(args.comment_output).write_text(comment_body)
         log.info("PR comment written to %s", args.comment_output)

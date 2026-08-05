@@ -77,6 +77,7 @@ jobs:
           PROW_URL: ${{ steps.extract-pr.outputs.prow_url }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          GITHUB_ACTION_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           python .github/scripts/e2e-failure-triage/triage.py \
             --prow-url "$PROW_URL" \
